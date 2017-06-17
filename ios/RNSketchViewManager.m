@@ -44,6 +44,13 @@ RCT_EXPORT_MODULE(RNSketchView)
     return self.sketchViewContainer;
 }
 
+RCT_EXPORT_METHOD(loadSketch:(nonnull NSString *)path) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.sketchViewContainer openSketchFile:path];
+    });
+}
+
+
 RCT_EXPORT_METHOD(saveSketch:(nonnull NSNumber *)reactTag) {
     dispatch_async(dispatch_get_main_queue(), ^{
         SketchFile *sketchFile = [self.sketchViewContainer saveToLocalCache];

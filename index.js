@@ -76,6 +76,14 @@ class SketchView extends Component {
     );
   }
 
+  loadSketch(path) {
+    UIManager.dispatchViewManagerCommand(
+      findNodeHandle(this),
+      UIManager.RNSketchView.Commands.loadSketch,
+      [path],
+    );
+  }
+
   saveSketch() {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
