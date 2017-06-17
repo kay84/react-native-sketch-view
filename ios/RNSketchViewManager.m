@@ -44,7 +44,7 @@ RCT_EXPORT_MODULE(RNSketchView)
     return self.sketchViewContainer;
 }
 
-RCT_EXPORT_METHOD(loadSketch:(nonnull NSString *)path) {
+RCT_EXPORT_METHOD(loadSketch:(nonnull NSNumber *)reactTag path:(NSInteger) path) {
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.sketchViewContainer openSketchFile:path];
     });
