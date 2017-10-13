@@ -6,7 +6,8 @@ import {
   ViewPropTypes,
   UIManager,
   findNodeHandle,
-  DeviceEventEmitter
+  DeviceEventEmitter,
+  ColorPropType, 
 } from 'react-native';
 
 class SketchView extends Component {
@@ -17,7 +18,6 @@ class SketchView extends Component {
   }
 
   onChange(event) {
-    console.log('save event: ',event.nativeEvent);
     if (event.nativeEvent.type === "onSaveSketch") {
 
       if (!this.props.onSaveSketch) {
@@ -29,6 +29,15 @@ class SketchView extends Component {
         imageWidth: event.nativeEvent.event.imageWidth,
         imageHeight: event.nativeEvent.event.imageHeight
       });
+    } else if (event.nativeEvent.type === "onExportSketch") {
+
+      if (!this.props.onExportSketch) {
+        return;
+      }
+
+      this.props.onExportSketch({
+        base64Encoded: event.nativeEvent.event.base64Encoded,
+      });
     }
   }
 
@@ -37,6 +46,13 @@ class SketchView extends Component {
       let sub = DeviceEventEmitter.addListener(
         'onSaveSketch',
         this.props.onSaveSketch
+      );
+      this.subscriptions.push(sub);
+    }
+    if (this.props.onExportSketch) {
+      let sub = DeviceEventEmitter.addListener(
+        'onExportSketch',
+        this.props.onExportSketch
       );
       this.subscriptions.push(sub);
     }
@@ -61,10 +77,26 @@ class SketchView extends Component {
     );
   }
 
+  loadSketch(path) {
+    UIManager.dispatchViewManagerCommand(
+      findNodeHandle(this),
+      UIManager.RNSketchView.Commands.loadSketch,
+      [path],
+    );
+  }
+
   saveSketch() {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
       UIManager.RNSketchView.Commands.saveSketch,
+      [],
+    );
+  }
+
+  exportSketch() {
+    UIManager.dispatchViewManagerCommand(
+      findNodeHandle(this),
+      UIManager.RNSketchView.Commands.exportSketch,
       [],
     );
   }
@@ -95,6 +127,8 @@ SketchView.constants = {
 SketchView.propTypes = {
   ...ViewPropTypes, // include the default view properties
   selectedTool: PropTypes.number,
+  toolColor: ColorPropType,
+  toolThickness: PropTypes.number,
   localSourceImagePath: PropTypes.string
 };
 

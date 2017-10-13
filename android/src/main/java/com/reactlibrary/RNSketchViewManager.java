@@ -1,6 +1,7 @@
 
 package com.reactlibrary;
 
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.view.View;
 
@@ -28,10 +29,13 @@ public class RNSketchViewManager extends SimpleViewManager<SketchViewContainer> 
   private static final String RN_PACKAGE = "RNSketchView";
 
   private static final String PROPS_SELECTED_TOOL = "selectedTool";
+  private static final String PROPS_TOOL_COLOR = "toolColor";
+  private static final String PROPS_TOOL_THICKNESS = "toolThickness";
   private static final String PROPS_LOCAL_SOURCE_IMAGE_PATH  = "localSourceImagePath";
 
   private static final int COMMAND_CLEAR_SKETCH = 321;
   private static final int COMMAND_SAVE_SKETCH = 780;
+  private static final int COMMAND_EXPORT_SKETCH = 511;
   private static final int COMMAND_CHANGE_TOOL = 406;
   
   @Override
@@ -49,6 +53,16 @@ public class RNSketchViewManager extends SimpleViewManager<SketchViewContainer> 
     viewContainer.sketchView.setToolType(toolId);
   }
 
+  @ReactProp(name = PROPS_TOOL_COLOR, defaultInt = Color.BLACK, customType = "Color")
+  public void setToolColor(SketchViewContainer viewContainer, @NonNull Integer color) {
+    viewContainer.sketchView.setToolColor(color);
+  }
+
+  @ReactProp(name = PROPS_TOOL_THICKNESS)
+  public void setPropsToolThickness(SketchViewContainer viewContainer, @NonNull float thickness) {
+    viewContainer.sketchView.setToolThickness(thickness);
+  }
+
   @ReactProp(name = PROPS_LOCAL_SOURCE_IMAGE_PATH)
   public void setLocalSourceImagePath(SketchViewContainer viewContainer, @NonNull String localSourceImagePath) {
     viewContainer.openSketchFile(localSourceImagePath);
@@ -62,6 +76,8 @@ public class RNSketchViewManager extends SimpleViewManager<SketchViewContainer> 
             COMMAND_CLEAR_SKETCH,
             "saveSketch",
             COMMAND_SAVE_SKETCH,
+            "exportSketch",
+            COMMAND_EXPORT_SKETCH,
             "changeTool",
             COMMAND_CHANGE_TOOL);
   }
@@ -87,6 +103,10 @@ public class RNSketchViewManager extends SimpleViewManager<SketchViewContainer> 
         } catch (IOException e) {
           e.printStackTrace();
         }
+      case COMMAND_EXPORT_SKETCH:
+        String encoding = root.getBase64();
+        onExportSketch(root, encoding);
+        return;
       default:
         throw new IllegalArgumentException(String.format(Locale.ENGLISH, "Unsupported command %d.", commandId));
     }
@@ -98,6 +118,12 @@ public class RNSketchViewManager extends SimpleViewManager<SketchViewContainer> 
     event.putInt("imageWidth", sketchFile.width);
     event.putInt("imageHeight", sketchFile.height);
     sendEvent(root, "onSaveSketch", event);
+  }
+
+  private void onExportSketch(SketchViewContainer root, String encoding) {
+    WritableMap event = Arguments.createMap();
+    event.putString("base64Encoded", encoding);
+    sendEvent(root, "onExportSketch", event);
   }
 
   private void sendEvent(View view, String eventType, WritableMap event) {

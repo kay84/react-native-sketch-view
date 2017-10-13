@@ -15,6 +15,7 @@
 @property (unsafe_unretained, nonatomic) IBOutlet SketchView *sketchView;
 
 -(SketchFile *)saveToLocalCache;
+-(NSString *)getBase64;
 -(BOOL)openSketchFile:(NSString *)localFilePath;
 
 

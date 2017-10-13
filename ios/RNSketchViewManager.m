@@ -15,6 +15,18 @@ RCT_CUSTOM_VIEW_PROPERTY(selectedTool, NSInteger, SketchViewContainer)
     [currentView.sketchView setToolType:[RCTConvert NSInteger:json]];
 }
 
+RCT_CUSTOM_VIEW_PROPERTY(toolColor, UIColor, SketchViewContainer)
+{
+    SketchViewContainer *currentView = !view ? defaultView : view;
+    [currentView.sketchView setToolColor:[RCTConvert UIColor:json]];
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(toolThickness, CGFloat, SketchViewContainer)
+{
+    SketchViewContainer *currentView = !view ? defaultView : view;
+    [currentView.sketchView setToolThickness:[RCTConvert CGFloat:json]];
+}
+
 RCT_CUSTOM_VIEW_PROPERTY(localSourceImagePath, NSString, SketchViewContainer)
 {
     SketchViewContainer *currentView = !view ? defaultView : view;
@@ -32,10 +44,24 @@ RCT_EXPORT_MODULE(RNSketchView)
     return self.sketchViewContainer;
 }
 
+RCT_EXPORT_METHOD(loadSketch:(nonnull NSNumber *)reactTag path:(nonnull NSString *)path) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.sketchViewContainer openSketchFile:path];
+    });
+}
+
+
 RCT_EXPORT_METHOD(saveSketch:(nonnull NSNumber *)reactTag) {
     dispatch_async(dispatch_get_main_queue(), ^{
         SketchFile *sketchFile = [self.sketchViewContainer saveToLocalCache];
         [self onSaveSketch:sketchFile];
+    });
+}
+
+RCT_EXPORT_METHOD(exportSketch:(nonnull NSNumber *)reactTag) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSString *base64 = [self.sketchViewContainer getBase64];
+        [self onExportSketch:base64];
     });
 }
 
@@ -56,6 +82,14 @@ RCT_EXPORT_METHOD(changeTool:(nonnull NSNumber *)reactTag toolId:(NSInteger) too
     @"localFilePath": sketchFile.localFilePath,
     @"imageWidth": [NSNumber numberWithFloat:sketchFile.size.width],
     @"imageHeight": [NSNumber numberWithFloat:sketchFile.size.height]
+    }];
+}
+
+-(void)onExportSketch:(NSString *) encoding
+{
+    [self.bridge.eventDispatcher sendDeviceEventWithName:@"onExportSketch" body:
+  @{
+    @"base64Encoded": encoding,
     }];
 }
 
