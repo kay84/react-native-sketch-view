@@ -97,6 +97,8 @@ export default HandNote;
 2. `saveSketch()` - Initiates saving of sketch.
 3. `changeTool(toolId)` - Changes selected tool.
 	* Tool Id can be found using SketchView tooltype constants eg. `SketchView.constants.toolType.pen.id`
+4. (ANDROID)`setEdited(edited)` - Changes internal edited state.
+
 #### Tool Types
 1. Pen - `SketchView.constants.toolType.pen`
 2. Eraser - `SketchView.constants.toolType.eraser`
@@ -111,6 +113,8 @@ export default HandNote;
 		* `localFilePath` - Local file path of the saved image.
 		* `imageWidth` - Width of the saved image.
 		* `imageHeight` - Height of the saved image.
+1. `onSketchViewEdited(edited)` - Callback when edited state changes.
+	* `edited` boolean which indicated if painted on surface
 
 ## License
 [MIT](./LICENSE)
