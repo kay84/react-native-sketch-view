@@ -41,6 +41,9 @@ RCT_EXPORT_MODULE(RNSketchView)
 -(UIView *)view
 {
     self.sketchViewContainer = [[[NSBundle mainBundle] loadNibNamed:@"SketchViewContainer" owner:self options:nil] firstObject];
+    self.sketchViewContainer.sketchView.editedCallback = ^(Boolean edited) {
+        [self onSketchViewEdited:edited];
+    };
     return self.sketchViewContainer;
 }
 
@@ -91,6 +94,14 @@ RCT_EXPORT_METHOD(changeTool:(nonnull NSNumber *)reactTag toolId:(NSInteger) too
   @{
     @"base64Encoded": encoding,
     }];
+}
+
+-(void)onSketchViewEdited:(Boolean) edited
+{
+    [self.bridge.eventDispatcher sendDeviceEventWithName:@"onSketchViewEdited" body:
+     @{
+       @"edited": @(edited)
+       }];
 }
 
 @end

@@ -10,9 +10,14 @@
 #import "Paint.h"
 #import "SketchTool.h"
 
+typedef void (^SketchViewCallback) (Boolean edited);
+
 @interface SketchView : UIView
 
--(void) clear;
+@property (strong, nonatomic) SketchViewCallback editedCallback;
+@property (nonatomic) Boolean edited;
+
+-(void)clear;
 -(void)setToolType:(SketchToolType) toolType;
 -(void)setToolColor:(NSMutableDictionary *)rgba;
 -(void)setToolThickness:(CGFloat)thickness;

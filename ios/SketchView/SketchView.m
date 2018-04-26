@@ -28,6 +28,7 @@
 
 - (void) initialize
 {
+    self.edited = false;
     [self setMultipleTouchEnabled:NO];
     penTool = [[PenSketchTool alloc] initWithTouchView:self];
     eraseTool = [[EraserSketchTool alloc] initWithTouchView:self];
@@ -86,6 +87,10 @@
 
 -(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+    if (self.editedCallback) {
+        self.edited = true;
+        self.editedCallback(self.edited);
+    }
     [currentTool touchesBegan:touches withEvent:event];
 }
 
