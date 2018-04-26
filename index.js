@@ -7,7 +7,7 @@ import {
   UIManager,
   findNodeHandle,
   DeviceEventEmitter,
-  ColorPropType, 
+  ColorPropType,
 } from 'react-native';
 
 class SketchView extends Component {
@@ -38,14 +38,18 @@ class SketchView extends Component {
       this.props.onExportSketch({
         base64Encoded: event.nativeEvent.event.base64Encoded,
       });
+    } else if (event.nativeEvent.type === "onSketchViewEdited") {
+      if (!this.props.onSketchViewEdited) {
+        return;
+      }
+      this.props.onSketchViewEdited(event.nativeEvent.event.edited);
     }
   }
 
   componentDidMount() {
     if (this.props.onSaveSketch) {
       let sub = DeviceEventEmitter.addListener(
-        'onSaveSketch',
-        this.props.onSaveSketch
+        'onSaveSketch', this.props.onSaveSketch
       );
       this.subscriptions.push(sub);
     }
@@ -53,6 +57,13 @@ class SketchView extends Component {
       let sub = DeviceEventEmitter.addListener(
         'onExportSketch',
         this.props.onExportSketch
+      );
+      this.subscriptions.push(sub);
+    }
+    if (this.props.onSketchViewEdited) {
+      let sub = DeviceEventEmitter.addListener(
+        'onSketchViewEdited',
+        this.props.onSketchViewEdited
       );
       this.subscriptions.push(sub);
     }
@@ -109,6 +120,13 @@ class SketchView extends Component {
     );
   }
 
+  setEdited(edited) {
+    UIManager.dispatchViewManagerCommand(
+      findNodeHandle(this),
+      UIManager.RNSketchView.Commands.setEdited,
+      [edited],
+    );
+  }
 }
 
 SketchView.constants = {

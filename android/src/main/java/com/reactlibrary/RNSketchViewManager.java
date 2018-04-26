@@ -37,7 +37,7 @@ public class RNSketchViewManager extends SimpleViewManager<SketchViewContainer> 
   private static final int COMMAND_SAVE_SKETCH = 780;
   private static final int COMMAND_EXPORT_SKETCH = 511;
   private static final int COMMAND_CHANGE_TOOL = 406;
-  
+  private static final int COMMAND_SET_EDITED = 123;
   @Override
   public String getName() {
     return RN_PACKAGE;
@@ -79,7 +79,9 @@ public class RNSketchViewManager extends SimpleViewManager<SketchViewContainer> 
             "exportSketch",
             COMMAND_EXPORT_SKETCH,
             "changeTool",
-            COMMAND_CHANGE_TOOL);
+            COMMAND_CHANGE_TOOL,
+            "setEdited",
+            COMMAND_SET_EDITED);
   }
 
   @Override
@@ -106,6 +108,10 @@ public class RNSketchViewManager extends SimpleViewManager<SketchViewContainer> 
       case COMMAND_EXPORT_SKETCH:
         String encoding = root.getBase64();
         onExportSketch(root, encoding);
+        return;
+      case COMMAND_SET_EDITED:
+        Assertions.assertNotNull(args);
+        root.sketchView.setSketchViewEdited(args.getBoolean(0));
         return;
       default:
         throw new IllegalArgumentException(String.format(Locale.ENGLISH, "Unsupported command %d.", commandId));
