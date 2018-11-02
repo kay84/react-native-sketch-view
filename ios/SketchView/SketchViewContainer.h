@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "SketchView.h"
 #import "SketchFile.h"
+#import <React/RCTComponent.h>
 
 @interface SketchViewContainer : UIView
 

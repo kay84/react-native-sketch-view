@@ -1,5 +1,10 @@
 
 #import "RNSketchViewManager.h"
+#import <React/RCTBridge.h>
+#import <React/RCTBridgeModule.h>
+#import <React/RCTUIManager.h>
+#import "SketchViewContainer.h"
+
 
 
 @implementation RNSketchViewManager
@@ -8,6 +13,8 @@
 {
     return dispatch_get_main_queue();
 }
+
+RCT_EXPORT_MODULE(RNSketchView)
 
 RCT_CUSTOM_VIEW_PROPERTY(selectedTool, NSInteger, SketchViewContainer)
 {
@@ -36,73 +43,109 @@ RCT_CUSTOM_VIEW_PROPERTY(localSourceImagePath, NSString, SketchViewContainer)
     });
 }
 
-RCT_EXPORT_MODULE(RNSketchView)
-
 -(UIView *)view
 {
-    self.sketchViewContainer = [[[NSBundle mainBundle] loadNibNamed:@"SketchViewContainer" owner:self options:nil] firstObject];
-    self.sketchViewContainer.sketchView.editedCallback = ^(Boolean edited) {
-        [self onSketchViewEdited:edited];
+    SketchViewContainer *sketchViewContainer = [[[NSBundle mainBundle] loadNibNamed:@"SketchViewContainer" owner:self options:nil] firstObject];
+    sketchViewContainer.sketchView.editedCallback = ^(Boolean edited) {
+        [self _onSketchViewEdited:edited];
     };
-    return self.sketchViewContainer;
+    return sketchViewContainer;
 }
 
 RCT_EXPORT_METHOD(loadSketch:(nonnull NSNumber *)reactTag path:(nonnull NSString *)path) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.sketchViewContainer openSketchFile:path];
-    });
+    
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,SketchViewContainer *> *viewRegistry) {
+        SketchViewContainer *view = (SketchViewContainer *)viewRegistry[reactTag];
+        if (![view isKindOfClass:[SketchViewContainer class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RCTCamera, got: %@", view);
+        } else {
+            [view openSketchFile:path];
+        }
+    }];
+    
 }
 
 
 RCT_EXPORT_METHOD(saveSketch:(nonnull NSNumber *)reactTag) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        SketchFile *sketchFile = [self.sketchViewContainer saveToLocalCache];
-        [self onSaveSketch:sketchFile];
-    });
+    
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,SketchViewContainer *> *viewRegistry) {
+        SketchViewContainer *view = (SketchViewContainer *)viewRegistry[reactTag];
+        if (![view isKindOfClass:[SketchViewContainer class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RCTCamera, got: %@", view);
+        } else {
+            SketchFile *sketchFile = [view saveToLocalCache];
+            [self onSaveSketch:sketchFile];
+        }
+    }];
+    
 }
 
 RCT_EXPORT_METHOD(exportSketch:(nonnull NSNumber *)reactTag) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSString *base64 = [self.sketchViewContainer getBase64];
-        [self onExportSketch:base64];
-    });
+    
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,SketchViewContainer *> *viewRegistry) {
+        SketchViewContainer *view = (SketchViewContainer *)viewRegistry[reactTag];
+        if (![view isKindOfClass:[SketchViewContainer class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RCTCamera, got: %@", view);
+        } else {
+            NSString *base64 = [view getBase64];
+            [self onExportSketch:base64];
+        }
+    }];
+    
 }
 
 RCT_EXPORT_METHOD(clearSketch:(nonnull NSNumber *)reactTag) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.sketchViewContainer.sketchView clear];
-    });
+    
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,SketchViewContainer *> *viewRegistry) {
+        SketchViewContainer *view = (SketchViewContainer *)viewRegistry[reactTag];
+        if (![view isKindOfClass:[SketchViewContainer class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RCTCamera, got: %@", view);
+        } else {
+            [view.sketchView clear];
+        }
+    }];
+    
 }
 
 RCT_EXPORT_METHOD(changeTool:(nonnull NSNumber *)reactTag toolId:(NSInteger) toolId) {
-    [self.sketchViewContainer.sketchView setToolType:toolId];
+    [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,SketchViewContainer *> *viewRegistry) {
+        SketchViewContainer *view = (SketchViewContainer *)viewRegistry[reactTag];
+        if (![view isKindOfClass:[SketchViewContainer class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RCTCamera, got: %@", view);
+        } else {
+            [view.sketchView setToolType:toolId];
+        }
+    }];
+    
 }
 
 -(void)onSaveSketch:(SketchFile *) sketchFile
 {
     [self.bridge.eventDispatcher sendDeviceEventWithName:@"onSaveSketch" body:
-  @{
-    @"localFilePath": sketchFile.localFilePath,
-    @"imageWidth": [NSNumber numberWithFloat:sketchFile.size.width],
-    @"imageHeight": [NSNumber numberWithFloat:sketchFile.size.height]
-    }];
+     @{
+       @"localFilePath": sketchFile.localFilePath,
+       @"imageWidth": [NSNumber numberWithFloat:sketchFile.size.width],
+       @"imageHeight": [NSNumber numberWithFloat:sketchFile.size.height]
+       }];
 }
 
 -(void)onExportSketch:(NSString *) encoding
 {
     [self.bridge.eventDispatcher sendDeviceEventWithName:@"onExportSketch" body:
-  @{
-    @"base64Encoded": encoding,
-    }];
+     @{
+       @"base64Encoded": encoding,
+       }];
 }
 
--(void)onSketchViewEdited:(Boolean) edited
+-(void)_onSketchViewEdited:(Boolean) edited
 {
+    
     [self.bridge.eventDispatcher sendDeviceEventWithName:@"onSketchViewEdited" body:
      @{
        @"edited": @(edited)
        }];
+    
 }
 
 @end
-  
+

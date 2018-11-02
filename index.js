@@ -1,131 +1,131 @@
 
-import React, { Component } from 'react';
-import { PropTypes } from 'prop-types';
+import React, { Component } from 'react'
+import { PropTypes } from 'prop-types'
 import {
   requireNativeComponent,
   ViewPropTypes,
   UIManager,
   findNodeHandle,
   DeviceEventEmitter,
-  ColorPropType,
-} from 'react-native';
+  ColorPropType
+} from 'react-native'
 
 class SketchView extends Component {
-  constructor(props) {
-    super(props);
-    this.onChange = this.onChange.bind(this);
-    this.subscriptions = [];
+  constructor (props) {
+    super(props)
+    this.onChange = this.onChange.bind(this)
+    this.subscriptions = []
   }
 
-  onChange(event) {
-    if (event.nativeEvent.type === "onSaveSketch") {
-
+  onChange (event) {
+    if (event.nativeEvent.type === 'onSaveSketch') {
       if (!this.props.onSaveSketch) {
-        return;
+        return
       }
 
       this.props.onSaveSketch({
         localFilePath: event.nativeEvent.event.localFilePath,
         imageWidth: event.nativeEvent.event.imageWidth,
         imageHeight: event.nativeEvent.event.imageHeight
-      });
-    } else if (event.nativeEvent.type === "onExportSketch") {
-
+      })
+    } else if (event.nativeEvent.type === 'onExportSketch') {
       if (!this.props.onExportSketch) {
-        return;
+        return
       }
 
       this.props.onExportSketch({
-        base64Encoded: event.nativeEvent.event.base64Encoded,
-      });
-    } else if (event.nativeEvent.type === "onSketchViewEdited") {
+        base64Encoded: event.nativeEvent.event.base64Encoded
+      })
+    } else if (event.nativeEvent.type === 'onSketchViewEdited') {
       if (!this.props.onSketchViewEdited) {
-        return;
+        return
       }
-      this.props.onSketchViewEdited(event.nativeEvent.event.edited);
+      this.props.onSketchViewEdited(event.nativeEvent.event.edited)
     }
   }
 
-  componentDidMount() {
+  componentDidMount () {
     if (this.props.onSaveSketch) {
       let sub = DeviceEventEmitter.addListener(
         'onSaveSketch', this.props.onSaveSketch
-      );
-      this.subscriptions.push(sub);
+      )
+      this.subscriptions.push(sub)
     }
     if (this.props.onExportSketch) {
       let sub = DeviceEventEmitter.addListener(
         'onExportSketch',
         this.props.onExportSketch
-      );
-      this.subscriptions.push(sub);
+      )
+      this.subscriptions.push(sub)
     }
     if (this.props.onSketchViewEdited) {
       let sub = DeviceEventEmitter.addListener(
         'onSketchViewEdited',
         this.props.onSketchViewEdited
-      );
-      this.subscriptions.push(sub);
+      )
+      this.subscriptions.push(sub)
     }
   }
 
-  componentWillUnmount() {
-    this.subscriptions.forEach(sub => sub.remove());
-    this.subscriptions = [];
+  componentWillUnmount () {
+    this.subscriptions.forEach(sub => sub.remove())
+    this.subscriptions = []
   }
 
-  render() {
+  render () {
     return (
-      <RNSketchView {... this.props} onChange={this.onChange}/>
-    );
+      <RNSketchView
+        {... this.props}
+        onChange={this.onChange} />
+    )
   }
 
-  clearSketch() {
+  clearSketch () {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
       UIManager.RNSketchView.Commands.clearSketch,
-      [],
-    );
+      []
+    )
   }
 
-  loadSketch(path) {
+  loadSketch (path) {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
       UIManager.RNSketchView.Commands.loadSketch,
-      [path],
-    );
+      [path]
+    )
   }
 
-  saveSketch() {
+  saveSketch () {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
       UIManager.RNSketchView.Commands.saveSketch,
-      [],
-    );
+      []
+    )
   }
 
-  exportSketch() {
+  exportSketch () {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
       UIManager.RNSketchView.Commands.exportSketch,
-      [],
-    );
+      []
+    )
   }
 
-  changeTool(toolId) {
+  changeTool (toolId) {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
       UIManager.RNSketchView.Commands.changeTool,
-      [toolId],
-    );
+      [toolId]
+    )
   }
 
-  setEdited(edited) {
+  setEdited (edited) {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
       UIManager.RNSketchView.Commands.setEdited,
-      [edited],
-    );
+      [edited]
+    )
   }
 }
 
@@ -133,14 +133,14 @@ SketchView.constants = {
   toolType: {
     pen: {
       id: 0,
-      name: 'Pen',
+      name: 'Pen'
     },
     eraser: {
       id: 1,
       name: 'Eraser'
     }
   }
-};
+}
 
 SketchView.propTypes = {
   ...ViewPropTypes, // include the default view properties
@@ -148,10 +148,12 @@ SketchView.propTypes = {
   toolColor: ColorPropType,
   toolThickness: PropTypes.number,
   localSourceImagePath: PropTypes.string
-};
+}
 
 let RNSketchView = requireNativeComponent('RNSketchView', SketchView, {
-  nativeOnly: { onChange: true }
-});
+  nativeOnly: {
+    onChange: true
+  }
+})
 
-export default SketchView;
+export default SketchView
