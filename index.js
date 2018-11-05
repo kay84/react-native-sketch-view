@@ -13,70 +13,43 @@ import {
 class SketchView extends Component {
   constructor (props) {
     super(props)
-    this.onChange = this.onChange.bind(this)
-    this.subscriptions = []
   }
 
-  onChange (event) {
-    if (event.nativeEvent.type === 'onSaveSketch') {
-      if (!this.props.onSaveSketch) {
-        return
-      }
-
-      this.props.onSaveSketch({
-        localFilePath: event.nativeEvent.event.localFilePath,
-        imageWidth: event.nativeEvent.event.imageWidth,
-        imageHeight: event.nativeEvent.event.imageHeight
-      })
-    } else if (event.nativeEvent.type === 'onExportSketch') {
-      if (!this.props.onExportSketch) {
-        return
-      }
-
-      this.props.onExportSketch({
-        base64Encoded: event.nativeEvent.event.base64Encoded
-      })
-    } else if (event.nativeEvent.type === 'onSketchViewEdited') {
-      if (!this.props.onSketchViewEdited) {
-        return
-      }
-      this.props.onSketchViewEdited(event.nativeEvent.event.edited)
+  _onSketchViewEdited = (event) => {
+    if (!this.props.onSketchViewEdited) {
+      return
     }
+    this.props.onSketchViewEdited(event.nativeEvent.edited)
   }
 
-  componentDidMount () {
-    if (this.props.onSaveSketch) {
-      let sub = DeviceEventEmitter.addListener(
-        'onSaveSketch', this.props.onSaveSketch
-      )
-      this.subscriptions.push(sub)
+  _onExportSketch = (event) => {
+    if (!this.props.onExportSketch) {
+      return
     }
-    if (this.props.onExportSketch) {
-      let sub = DeviceEventEmitter.addListener(
-        'onExportSketch',
-        this.props.onExportSketch
-      )
-      this.subscriptions.push(sub)
-    }
-    if (this.props.onSketchViewEdited) {
-      let sub = DeviceEventEmitter.addListener(
-        'onSketchViewEdited',
-        this.props.onSketchViewEdited
-      )
-      this.subscriptions.push(sub)
-    }
+    this.props.onExportSketch({
+      base64Encoded: event.nativeEvent.base64Encoded
+    })
   }
 
-  componentWillUnmount () {
-    this.subscriptions.forEach(sub => sub.remove())
-    this.subscriptions = []
+  _onSaveSketch = (event) => {
+    if (!this.props.onSaveSketch) {
+      return
+    }
+    this.props.onSaveSketch({
+      localFilePath: event.nativeEvent.localFilePath,
+      imageWidth: event.nativeEvent.imageWidth,
+      imageHeight: event.nativeEvent.imageHeight
+    })
   }
 
   render () {
     return (
       <RNSketchView
         {... this.props}
-        onChange={this.onChange} />
+        onSketchViewEdited={this._onSketchViewEdited}
+        onSaveSketch={this._onSaveSketch}
+        onExportSketch={this._onExportSketch}
+        />
     )
   }
 
@@ -150,10 +123,6 @@ SketchView.propTypes = {
   localSourceImagePath: PropTypes.string
 }
 
-let RNSketchView = requireNativeComponent('RNSketchView', SketchView, {
-  nativeOnly: {
-    onChange: true
-  }
-})
+let RNSketchView = requireNativeComponent('RNSketchView', SketchView)
 
 export default SketchView

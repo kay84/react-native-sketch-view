@@ -13,6 +13,10 @@
 
 @interface SketchViewContainer : UIView
 
+@property (nonatomic, copy) RCTBubblingEventBlock onSketchViewEdited;
+@property (nonatomic, copy) RCTBubblingEventBlock onExportSketch;
+@property (nonatomic, copy) RCTBubblingEventBlock onSaveSketch;
+
 @property (unsafe_unretained, nonatomic) IBOutlet SketchView *sketchView;
 
 -(SketchFile *)saveToLocalCache;

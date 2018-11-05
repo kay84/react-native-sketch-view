@@ -43,11 +43,19 @@ RCT_CUSTOM_VIEW_PROPERTY(localSourceImagePath, NSString, SketchViewContainer)
     });
 }
 
+RCT_EXPORT_VIEW_PROPERTY(onSketchViewEdited, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onExportSketch, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onSaveSketch, RCTBubblingEventBlock)
+
 -(UIView *)view
 {
     SketchViewContainer *sketchViewContainer = [[[NSBundle mainBundle] loadNibNamed:@"SketchViewContainer" owner:self options:nil] firstObject];
     sketchViewContainer.sketchView.editedCallback = ^(Boolean edited) {
-        [self _onSketchViewEdited:edited];
+        if (sketchViewContainer.onSketchViewEdited) {
+            sketchViewContainer.onSketchViewEdited(@{
+                                                     @"edited": @(edited)
+                                                     });
+        }
     };
     return sketchViewContainer;
 }
@@ -69,12 +77,18 @@ RCT_EXPORT_METHOD(loadSketch:(nonnull NSNumber *)reactTag path:(nonnull NSString
 RCT_EXPORT_METHOD(saveSketch:(nonnull NSNumber *)reactTag) {
     
     [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,SketchViewContainer *> *viewRegistry) {
-        SketchViewContainer *view = (SketchViewContainer *)viewRegistry[reactTag];
-        if (![view isKindOfClass:[SketchViewContainer class]]) {
-            RCTLogError(@"Invalid view returned from registry, expecting RCTCamera, got: %@", view);
+        SketchViewContainer *sketchViewContainer = (SketchViewContainer *)viewRegistry[reactTag];
+        if (![sketchViewContainer isKindOfClass:[SketchViewContainer class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RCTCamera, got: %@", sketchViewContainer);
         } else {
-            SketchFile *sketchFile = [view saveToLocalCache];
-            [self onSaveSketch:sketchFile];
+            SketchFile *sketchFile = [sketchViewContainer saveToLocalCache];
+            if (sketchViewContainer.onSaveSketch) {
+                sketchViewContainer.onSaveSketch(@{
+                                                   @"localFilePath": sketchFile.localFilePath,
+                                                   @"imageWidth": [NSNumber numberWithFloat:sketchFile.size.width],
+                                                   @"imageHeight": [NSNumber numberWithFloat:sketchFile.size.height]
+                                                   });
+            }
         }
     }];
     
@@ -83,12 +97,16 @@ RCT_EXPORT_METHOD(saveSketch:(nonnull NSNumber *)reactTag) {
 RCT_EXPORT_METHOD(exportSketch:(nonnull NSNumber *)reactTag) {
     
     [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *,SketchViewContainer *> *viewRegistry) {
-        SketchViewContainer *view = (SketchViewContainer *)viewRegistry[reactTag];
-        if (![view isKindOfClass:[SketchViewContainer class]]) {
-            RCTLogError(@"Invalid view returned from registry, expecting RCTCamera, got: %@", view);
+        SketchViewContainer *sketchViewContainer = (SketchViewContainer *)viewRegistry[reactTag];
+        if (![sketchViewContainer isKindOfClass:[SketchViewContainer class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RCTCamera, got: %@", sketchViewContainer);
         } else {
-            NSString *base64 = [view getBase64];
-            [self onExportSketch:base64];
+            NSString *base64 = [sketchViewContainer getBase64];
+            if (sketchViewContainer.onExportSketch) {
+                sketchViewContainer.onExportSketch(@{
+                                                     @"base64Encoded": base64,
+                                                     });
+            }
         }
     }];
     
@@ -116,34 +134,6 @@ RCT_EXPORT_METHOD(changeTool:(nonnull NSNumber *)reactTag toolId:(NSInteger) too
             [view.sketchView setToolType:toolId];
         }
     }];
-    
-}
-
--(void)onSaveSketch:(SketchFile *) sketchFile
-{
-    [self.bridge.eventDispatcher sendDeviceEventWithName:@"onSaveSketch" body:
-     @{
-       @"localFilePath": sketchFile.localFilePath,
-       @"imageWidth": [NSNumber numberWithFloat:sketchFile.size.width],
-       @"imageHeight": [NSNumber numberWithFloat:sketchFile.size.height]
-       }];
-}
-
--(void)onExportSketch:(NSString *) encoding
-{
-    [self.bridge.eventDispatcher sendDeviceEventWithName:@"onExportSketch" body:
-     @{
-       @"base64Encoded": encoding,
-       }];
-}
-
--(void)_onSketchViewEdited:(Boolean) edited
-{
-    
-    [self.bridge.eventDispatcher sendDeviceEventWithName:@"onSketchViewEdited" body:
-     @{
-       @"edited": @(edited)
-       }];
     
 }
 
